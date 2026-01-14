@@ -161,7 +161,19 @@ local function fullbreakvel(instance)
 	part.AssemblyAngularVelocity = Vector3.new()
 	part.AssemblyLinearVelocity = Vector3.new()
 end
-
+SetMotor6DTransform = function(motor, transform)
+	local name = motor.Name
+	motor.MaxVelocity = 9e9
+	local _, _, angle = transform:ToEulerAngles(Enum.RotationOrder.ZYX)
+	motor:SetDesiredAngle(angle)
+	local axis, angle = transform:ToAxisAngle()
+	local newangle = axis * angle
+	pcall(sethiddenproperty, motor, "ReplicateCurrentOffset6D", transform.Position)
+	pcall(sethiddenproperty, motor, "ReplicateCurrentAngle6D", newangle)
+end
+SetMotor6DOffset = function(motor, offset)
+	Util.SetMotor6DTransform(motor, motor.C0:Inverse() * offset * motor.C1)
+end
 function HatdropCallback(c, callback)
 	ws = game:GetService("Workspace")
 	G = ((getgenv and getgenv()) or _G)
