@@ -212,11 +212,11 @@ function HatdropCallback(c, callback)
 				for _,v in c:GetDescendants() do
 					if v:IsA("Motor6D") then
 						if v.Name == "RootJoint" then
-							SetMotor6DOffset(v, rootcf:ToObjectSpace(CFrame.new(RootPosition + Vector3.new(0, -0.25, 0)) * CFrame.Angles(math.pi * 0.5, 0, 0) * torsooffset))
+							SetMotor6DOffset(v, CFrame.new(-8, 0, 0)
 						elseif v.Name == "Neck" then
-							SetMotor6DOffset(v, torsooffset.Rotation:Inverse() * CFrame.new(math.random() * 0.05, 1.5, -20))
+							SetMotor6DOffset(v, CFrame.new(math.random() * 0.05, -1.5, 20))
 						else
-							SetMotor6DOffset(v, torsooffset.Rotation:Inverse() * CFrame.new(i * -3, 0, -2 + math.random() * 0.05))
+							SetMotor6DOffset(v, CFrame.new(i * -3, 0, 2 + math.random() * 0.05))
 							i += 1
 						end
 					end
