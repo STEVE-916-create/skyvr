@@ -172,7 +172,7 @@ SetMotor6DTransform = function(motor, transform)
 	pcall(sethiddenproperty, motor, "ReplicateCurrentAngle6D", newangle)
 end
 SetMotor6DOffset = function(motor, offset)
-	Util.SetMotor6DTransform(motor, motor.C0:Inverse() * offset * motor.C1)
+	SetMotor6DTransform(motor, motor.C0:Inverse() * offset * motor.C1)
 end
 function HatdropCallback(c, callback)
 	ws = game:GetService("Workspace")
