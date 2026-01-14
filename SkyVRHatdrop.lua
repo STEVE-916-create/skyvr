@@ -81,7 +81,7 @@ function Align(Part1,Part0,cf,isflingpart)
         if not _isnetworkowner(Part1) then return end
         Part1.CanCollide=false
         Part1.CFrame=Part0.CFrame*cf
-        Part1.Velocity = velocity or Vector3.new(20,20,20)
+        Part1.Velocity = velocity or Vector3.new(0,27,0)
     end)
 
     return {SetVelocity = function(self,v) velocity=v end,SetCFrame = function(self,v) cf=v end,}
@@ -148,8 +148,8 @@ pcall(function()
 	setsimulationradius(math.huge)
 end)
 pcall(function()
-	p.MaximumSimulationRadius = 9e9
-	p.SimulationRadius = 9e9
+	Player.MaximumSimulationRadius = 9e9
+	Player.SimulationRadius = 9e9
 end)
 
 local function fullbreakvel(instance)
@@ -160,10 +160,6 @@ local function fullbreakvel(instance)
 	end
 	part.AssemblyAngularVelocity = Vector3.new()
 	part.AssemblyLinearVelocity = Vector3.new()
-	for i, v in part:GetConnectedParts(true) do
-		v.AssemblyAngularVelocity = Vector3.new()
-		v.AssemblyLinearVelocity = Vector3.new()
-	end
 end
 
 function HatdropCallback(c, callback)
@@ -178,56 +174,102 @@ function HatdropCallback(c, callback)
 	p = players.LocalPlayer
 	ws.FallenPartsDestroyHeight = 0/0
 	local hum = c:WaitForChild("Humanoid")
+	task.spawn(function()
+		while true do
+			local die = hum:FindFirstChildWhichIsA("Animator")
+			if die then
+				die:Destroy()
+			end
+			hum.ChildAdded:Wait()
+		end
+	end)
+	task.spawn(function()
+		while true do
+			local die = c:FindFirstChild("Animate")
+			if die then
+				die:Destroy()
+			end
+			c.ChildAdded:Wait()
+		end
+	end)
 	local hrp = c:WaitForChild("HumanoidRootPart")
 	local head = c:WaitForChild("Head")
 	if hum and hrp and head then
-	    local r6 = hum.RigType == Enum.HumanoidRigType.R6
-	    if r6 then
-	        local anim = Instance.new("Animation")
-	        anim.AnimationId = "rbxassetid://35154961"
-	        local loadanim = hum:LoadAnimation(anim)
-	        loadanim:Play(0, 100, 0)
-	        loadanim.TimePosition = 3.24
-	    end
-	    hum:ChangeState(Enum.HumanoidStateType.Physics)
 	    local old = hrp.CFrame
 	    fullbreakvel(hrp)
-	    local cf = r6 and CFrame.new(hrp.CFrame.Position.X, fpdh + 1, hrp.CFrame.Position.Z) * CFrame.Angles(math.rad(90), 0, 0) or CFrame.new(hrp.CFrame.Position.X, fpdh + 1, hrp.CFrame.Position.Z)
-	    hrp.CFrame = cf
+	    local rootcf = CFrame.Angles(math.pi * 1.5, 0, 0) + Vector3.new(
+	    	old.X,
+	    	fpdh + 1.75,
+	    	old.Z
+	    )
+	    local cf = rootcf + Vector3.new(0, 141, 0)
+	    hrp.CFrame = cf + Vector3.new(0, 141, 0)
 	    local con
 	    con = runservice.PostSimulation:Connect(function()
 	        fullbreakvel(hrp)
-	        hrp.CFrame = cf
+	        hrp.CFrame = rootcf
+				local i = 1
+				for _,v in c:GetDescendants() do
+					if v:IsA("Motor6D") then
+						if v.Name == "RootJoint" then
+							SetMotor6DOffset(v, rootcf:ToObjectSpace(CFrame.new(RootPosition + Vector3.new(0, -0.25, 0)) * CFrame.Angles(math.pi * 0.5, 0, 0) * torsooffset))
+						elseif v.Name == "Neck" then
+							SetMotor6DOffset(v, torsooffset.Rotation:Inverse() * CFrame.new(math.random() * 0.05, 1.5, -20))
+						else
+							SetMotor6DOffset(v, torsooffset.Rotation:Inverse() * CFrame.new(i * -3, 0, -2 + math.random() * 0.05))
+							i += 1
+						end
+					end
+				end
 	    end)
-	    coroutine.wrap(function()
+	    replicatesignal(p.ConnectDiedSignalBackend)
+	    task.wait(game.Players.RespawnTime)
+	    cf = rootcf
+	    local handles = {}
+	    local bringconns = {}
+	    task.spawn(function()
 	        for i, v in hum:GetAccessories() do
 	            local han = v:FindFirstChild("Handle")
 	            local weld = han and han:FindFirstChildWhichIsA("Weld")
 	            if weld then
 	                sethiddenproperty(v, "BackendAccoutrementState", 0)
 	                local a = Instance.new("SelectionBox")
-	                a.LineThickness = 0.15000000596046448 * han.Size.Y/50
+	                a.LineThickness = 0.01
 	                a.Adornee = han
 	                a.Parent = han
 	                --weld:GetPropertyChangedSignal("Parent"):Wait()
 	                han:BreakJoints()
 	                han.AssemblyLinearVelocity = Vector3.new(0, 30, 0)
-	                --han.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-	                han.CFrame = old * CFrame.new(0, han.Size.Y/2, 0)
-	                local con
-	                con = runservice.PostSimulation:Connect(function()
+	                han.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+	                han.CFrame = cf + Vector3.new(0, 4, 0)
+	                table.insert(bringconns, runservice.PostSimulation:Connect(function()
 	                    han.AssemblyLinearVelocity = Vector3.new(0, 30, 0)
-	                    --han.AssemblyAngularVelocity = Vector3.new(9e9, 0, 9e9)
-	                    --han.CFrame = old
-	                end)
+	                    han.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+	                    han.CFrame = cf + Vector3.new(0, 4, 0)
+	                end))
+	                table.insert(handles, han)
 	            end
 	        end
-	    end)()
-	    task.wait(0.4)
+	    end)
+	    task.wait(0.25)
+	    hum:ChangeState(15)
 	    con:Disconnect()
 	    con = nil
+	    task.wait(1.5)
+	    for _,v in bringconns do
+	    	v:Disconnect()
+	    end
+	    local collide = 0
+	    for _,v in handles do
+	    	if v:IsDescendantOf(workspace) and v.CanCollide then
+	    		collide += 1
+	    		v.CanCollide = false
+	    	end
+	    end
 	    callback(getAllHats(c))
-	    hum:ChangeState(15)
+	    if #handles > collide then
+	    	replicatesignal(p.ConnectDiedSignalBackend)
+	    end
 	end
 end
 
@@ -305,19 +347,6 @@ getgenv().con2 = game:GetService("RunService").RenderStepped:connect(function()
     end
 end)
 
-local s,e = pcall(function()
-	HatdropCallback(Player.Character, function(allhats)
-	    for i,v in pairs(allhats) do
-	        if not v[1]:FindFirstChild("Handle") then continue end
-	        if v[2]=="headhats" then v[1].Handle.Transparency = options.HeadHatTransparency or 1 end
-	
-	        local align = Align(v[1].Handle,parts[v[2]],((v[2]=="headhats")and getgenv()[v[2]][(v[3])]) or CFrame.identity)
-	        rightarmalign = v[2]=="right" and align or rightarmalign
-	    end
-	end)
-end)
-if not s then print(e) end
-
 getgenv().conn = Player.CharacterAdded:Connect(function(Character)
     HatdropCallback(Player.Character, function(allhats)
         for i,v in pairs(allhats) do
@@ -329,3 +358,6 @@ getgenv().conn = Player.CharacterAdded:Connect(function(Character)
         end
     end)
 end)
+
+replicatesignal(Player.Kill)
+Player.Character:BreakJoints()
