@@ -224,7 +224,7 @@ function HatdropCallback(c, callback)
 				for _,v in c:GetDescendants() do
 					if v:IsA("Motor6D") then
 						if v.Name == "RootJoint" then
-							SetMotor6DOffset(v, CFrame.new(-8, 0, 0)
+							SetMotor6DOffset(v, CFrame.new(-8, 0, 0))
 						elseif v.Name == "Neck" then
 							SetMotor6DOffset(v, CFrame.new(math.random() * 0.05, -1.5, 20))
 						else
